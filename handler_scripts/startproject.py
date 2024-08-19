@@ -1,17 +1,17 @@
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from handler_scripts._terminal_colors import TerminalColors
+
 from handler_scripts._exceptions import NoProjectNameError
+from handler_scripts._terminal_colors import TerminalColors
 
 
-def check_name_available(name: str) -> bool:
-    project_names = []
-    for project in Path(".").iterdir():
-        if not project.is_dir():
-            continue
-        project_names.append(project.name)
-    return name not in project_names
+def check_name_available(name: str, conn: sqlite3.Connection) -> bool:
+    project_names = conn.execute(
+        """SELECT COUNT(DISTINCT name) FROM project WHERE name=? AND active=1""",
+        (name,),
+    )
+    return not bool(project_names.fetchone()[0])
 
 
 def create_project(name: str) -> None:
@@ -29,10 +29,10 @@ def create_project(name: str) -> None:
     )
 
 
-def save_project(project_name: str, conn: sqlite3.Connection) -> None:
+def save_project_details(project_name: str, conn: sqlite3.Connection) -> None:
     conn.execute(
         """INSERT INTO project VALUES (?, ?, ?)""",
-        (project_name, int(datetime.now().timestamp()), False),
+        (project_name, int(datetime.now().timestamp()), True),
     )
 
 
@@ -44,13 +44,7 @@ def main(**kwargs) -> None:
         )
     if not isinstance(project_name, str):
         raise TypeError("Invalid name [type] passed")
-    if not check_name_available(project_name):
-        print(
-            f"{TerminalColors.FAILURE}[Err] Name already used in another project{TerminalColors.END}"
-        )
-        exit(1)
 
-    create_project(project_name)
     conn = sqlite3.connect(Path(__file__).parent.parent / "projects.db")
     conn.autocommit = False
     try:
@@ -60,7 +54,13 @@ def main(**kwargs) -> None:
             CREATE TABLE IF NOT EXISTS project(name TEXT NOT NULL, created_ts INTEGER NOT NULL, active INTEGER NOT NULL);
             """
             )
-            save_project(project_name, conn)
+            if not check_name_available(project_name, conn):
+                print(
+                    f"{TerminalColors.FAILURE}[Err] Name already used in another project{TerminalColors.END}"
+                )
+                exit(1)
+            save_project_details(project_name, conn)
+            create_project(project_name)
             print(
                 f"{TerminalColors.SUCCESS}[X] Project saved successfully{TerminalColors.END}",
             )
@@ -74,3 +74,4 @@ def main(**kwargs) -> None:
             f"{TerminalColors.FAILURE}[Err] {err}{TerminalColors.END}",
         )
         exit(1)
+    conn.close()
