@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from handler_scripts._terminal_colors import TerminalColors
@@ -28,6 +29,13 @@ def create_project(name: str) -> None:
     )
 
 
+def save_project(project_name: str, conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """INSERT INTO project VALUES (?, ?, ?)""",
+        (project_name, int(datetime.now().timestamp()), False),
+    )
+
+
 def main(**kwargs) -> None:
     project_name = kwargs["project_name"]
     if not project_name:
@@ -43,3 +51,26 @@ def main(**kwargs) -> None:
         exit(1)
 
     create_project(project_name)
+    conn = sqlite3.connect(Path(__file__).parent.parent / "projects.db")
+    conn.autocommit = False
+    try:
+        with conn:
+            conn.executescript(
+                """
+            CREATE TABLE IF NOT EXISTS project(name TEXT NOT NULL, created_ts INTEGER NOT NULL, active INTEGER NOT NULL);
+            """
+            )
+            save_project(project_name, conn)
+            print(
+                f"{TerminalColors.SUCCESS}[X] Project saved successfully{TerminalColors.END}",
+            )
+    except sqlite3.OperationalError as err:
+        print(
+            f"{TerminalColors.FAILURE}[Err] {err}{TerminalColors.END}",
+        )
+        exit(1)
+    except sqlite3.IntegrityError as err:
+        print(
+            f"{TerminalColors.FAILURE}[Err] {err}{TerminalColors.END}",
+        )
+        exit(1)
