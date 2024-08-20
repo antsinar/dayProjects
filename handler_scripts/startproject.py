@@ -8,7 +8,7 @@ from handler_scripts._terminal_colors import TerminalColors
 
 def check_name_available(name: str, conn: sqlite3.Connection) -> bool:
     project_names = conn.execute(
-        """SELECT COUNT(DISTINCT name) FROM project WHERE name=? AND active=1;""",
+        """SELECT COUNT(DISTINCT name) FROM project WHERE name=?;""",
         (name,),
     )
     return not bool(project_names.fetchone()[0])
