@@ -8,7 +8,7 @@ from handler_scripts._terminal_colors import TerminalColors
 
 def check_name_available(name: str, conn: sqlite3.Connection) -> bool:
     project_names = conn.execute(
-        """SELECT COUNT(DISTINCT name) FROM project WHERE name=? AND active=1""",
+        """SELECT COUNT(DISTINCT name) FROM project WHERE name=? AND active=1;""",
         (name,),
     )
     return not bool(project_names.fetchone()[0])
@@ -49,11 +49,6 @@ def main(**kwargs) -> None:
     conn.autocommit = False
     try:
         with conn:
-            conn.executescript(
-                """
-            CREATE TABLE IF NOT EXISTS project(name TEXT NOT NULL, created_ts INTEGER NOT NULL, active INTEGER NOT NULL);
-            """
-            )
             if not check_name_available(project_name, conn):
                 print(
                     f"{TerminalColors.FAILURE}[Err] Name already used in another project{TerminalColors.END}"

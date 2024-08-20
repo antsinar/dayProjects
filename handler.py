@@ -1,3 +1,4 @@
+import sqlite3
 from argparse import ArgumentParser
 from enum import StrEnum
 from pathlib import Path
@@ -15,6 +16,18 @@ class ScriptOptions(StrEnum):
 
 def print_error(message: str) -> None:
     print(f"{TerminalColors.FAILURE}[Err] {message}{TerminalColors.END}")
+
+
+def init_database() -> None:
+    """Initialize a new database if it does not already exist"""
+    conn = sqlite3.connect(Path(__file__).parent / "projects.db")
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS project(name TEXT NOT NULL, created_ts INTEGER NOT NULL, active INTEGER NOT NULL);
+        """
+    )
+    conn.commit()
+    conn.close()
 
 
 def main() -> None:
@@ -37,6 +50,7 @@ def main() -> None:
     )
     parser.add_argument("-pn", "--project-name", type=str, required=False)
     args = parser.parse_args()
+    init_database()
     for path in Path("handler_scripts/").iterdir():
         if not path.is_file():
             continue
