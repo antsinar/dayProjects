@@ -8,10 +8,9 @@ from handler_scripts._terminal_colors import TerminalColors
 
 class ScriptOptions(StrEnum):
     STARTPROJECT = "start-project"
-    INSTALL = "install"
+    INSTALL = "install-project"
     DELETEPROJECT = "delete-project"
     SYNCPROJECTS = "sync-projects"
-    SYNCREQUIREMENTS = "sync-requirements"
 
 
 def print_error(message: str) -> None:
@@ -34,11 +33,10 @@ def main() -> None:
     """Call management command
     IMPORTANT: Must be called from the root directory (here)
     Options:
-    - startproject <proj_name>: Start a new project from existing template
-    - install <proj_name>: Install project dependencies and checks if already installed
-    - deleteproject <proj_name>: Removes a project from the list of completed projects on root
-    - syncprojects: Add all complete and non-complete projects to the list on root
-    - syncrequirements: Find all project dependencies and add the to the root requirements file
+    - start-project <proj_name>: Start a new project from existing template
+    - install-project <proj_name>: Install project dependencies and checks if already installed
+    - delete-project <proj_name>: Removes a project from the list of completed projects on root
+    - sync-projects: Add all complete and non-complete projects to the list on root
     Options are separate scripts, under the handler_scripts directory and are called via an enum by the user
     """
     parser = ArgumentParser()
