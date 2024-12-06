@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #grid {
+            display: grid;
+            grid-column-gap: 0px;
+            grid-row-gap: 0px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="grid" style="border: 1px solid black; width: fit-content; height: fit-content; margin: auto;"></div>
+
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            // init_grid(640, 480, 10);
+            const url_params = new URLSearchParams(window.location.search);
+            const cell_size = url_params.has("cell_size") ? url_params.get("cell_size") : 10;
+            const websocket = new WebSocket("ws://localhost:8001/");
+            get_updates(websocket, cell_size);
+        })
+
+        function init_grid(width = 640, height = 480, cell_size = 10) {
+            const grid = document.getElementById("grid");
+            grid.style.gridTemplateColumns = "repeat(" + Math.floor(width/cell_size).toString() + ", 1fr)";
+            grid.style.gridTemplateRows = "repeat(" + Math.floor(height/cell_size).toString() + ", 1fr)";
+            for (let i=0; i<width/cell_size; i++) {
+                for (let j=0; j<height/cell_size; j++) {
+                    cell = create_cell(cell_size)
+                    grid.appendChild(cell)
+                }
+            }
+        }
+
+        function create_row() {
+            let row = document.createElement("div");
+            row.style.display = "flex";
+            row.style.flexWrap = "nowrap";
+            return row;
+        }
+        
+        function create_cell(cell_size) {
+            let cell = document.createElement("div");
+            cell.style.width = cell_size.toString() + "px";
+            cell.style.height = cell_size.toString() + "px";
+            cell.style.border = "1px solid black";
+            return cell
+        }
+
+        function get_updates(websocket, cell_size) {
+            let current_row = 0;
+            websocket.addEventListener("message", ({ data }) => {
+                const incoming = JSON.parse(data);
+                const grid = document.getElementById("grid");
+                if (incoming.instance_id != current_row) {
+                    current_row = incoming.instance_id;
+                }
+                else {
+                    grid.lastChild?.remove()
+                }
+                row = create_row();
+                for (let char of incoming.instance) {
+                    cell = create_cell(cell_size);
+                    switch(char) {
+                        case 0:
+                            // cell.style.backgroundColor = "#8ec75a";
+                            cell.style.backgroundColor = "#3291a8";
+                            break;
+                        case 1:
+                            // cell.style.backgroundColor = "#e65449";
+                            cell.style.backgroundColor = "#6e411f";
+                            break;
+                        default:
+                            cell.style.backgroundColor = "#e6d449";
+                    }
+                    row.appendChild(cell);
+                }
+                grid.appendChild(row);
+            })
+        }
+    </script>
+</body>
+</html>
