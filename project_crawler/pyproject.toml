@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "project_crawler"
+version = "0.1"
+dependencies = ["httpx", "lxml==5.2.2", "networkx[default]==3.3"]
+requires-python = ">=3.11"
+authors = [{ name = "tasos", email = "test@example.com" }]
+maintainers = [{ name = "tasos", email = "test@example.com" }]
+description = "A barebones web crawler"
+readme = "readme.md"
+keywords = ["web", "crawler", "python"]
+classifiers = ["Programming Language :: Python"]
+
+[project.optional-dependencies]
+testing = ["pytest", "pytest-asyncio"]
+
+[project.urls]
+Repository = "https://github.com/antsinar/dayProjects.git"
